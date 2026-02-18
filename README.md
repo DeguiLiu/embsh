@@ -2,6 +2,10 @@
 
 # embsh
 
+[![CI](https://github.com/DeguiLiu/embsh/actions/workflows/ci.yml/badge.svg)](https://github.com/DeguiLiu/embsh/actions/workflows/ci.yml)
+[![Code Coverage](https://github.com/DeguiLiu/embsh/actions/workflows/coverage.yml/badge.svg)](https://github.com/DeguiLiu/embsh/actions/workflows/coverage.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 Modern C++17 header-only embedded debug shell with multi-backend I/O (TCP telnet / Console / UART), IAC protocol, authentication, arrow-key history, and tab completion.
 
 ## Features
