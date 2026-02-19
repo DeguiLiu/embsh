@@ -26,8 +26,10 @@ struct PipePair {
   }
 
   ~PipePair() {
-    if (read_fd >= 0) ::close(read_fd);
-    if (write_fd >= 0) ::close(write_fd);
+    if (read_fd >= 0)
+      ::close(read_fd);
+    if (write_fd >= 0)
+      ::close(write_fd);
   }
 };
 
@@ -262,7 +264,7 @@ TEST_CASE("LineEditor: ESC sequence triggers history up", "[line_editor]") {
   // ESC [ A = Up arrow.
   embsh::editor::ProcessByte(s, 0x1B, prompt);  // ESC
   embsh::editor::ProcessByte(s, '[', prompt);
-  embsh::editor::ProcessByte(s, 'A', prompt);    // Up
+  embsh::editor::ProcessByte(s, 'A', prompt);  // Up
 
   CHECK(std::strcmp(s.line_buf, "history_cmd") == 0);
 }
@@ -275,7 +277,7 @@ TEST_CASE("LineEditor: unknown ESC sequence is ignored", "[line_editor]") {
 
   embsh::editor::ProcessByte(s, 'x', prompt);
   embsh::editor::ProcessByte(s, 0x1B, prompt);  // ESC
-  embsh::editor::ProcessByte(s, 'O', prompt);    // Not '[', reset
+  embsh::editor::ProcessByte(s, 'O', prompt);   // Not '[', reset
 
   CHECK(s.line_pos == 1);
   CHECK(s.line_buf[0] == 'x');
@@ -322,6 +324,6 @@ TEST_CASE("LineEditor: IAC IAC passes literal 0xFF", "[line_editor]") {
   embsh::Session s;
   s.iac_state = embsh::Session::IacState::kNormal;
 
-  CHECK(embsh::editor::FilterIac(s, 0xFF) == '\0');           // IAC
+  CHECK(embsh::editor::FilterIac(s, 0xFF) == '\0');                     // IAC
   CHECK(embsh::editor::FilterIac(s, 0xFF) == static_cast<char>(0xFF));  // Literal 0xFF
 }

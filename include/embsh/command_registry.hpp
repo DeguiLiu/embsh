@@ -58,8 +58,7 @@ struct CmdEntry {
  * @param argv   Output array of argument pointers; must hold EMBSH_MAX_ARGS.
  * @return Number of arguments parsed (argc), or -1 on overflow.
  */
-inline int ShellSplit(char* cmd, uint32_t length,
-                      char* argv[EMBSH_MAX_ARGS]) noexcept {
+inline int ShellSplit(char* cmd, uint32_t length, char* argv[EMBSH_MAX_ARGS]) noexcept {
   int argc = 0;
   uint32_t i = 0;
 
@@ -69,14 +68,16 @@ inline int ShellSplit(char* cmd, uint32_t length,
       cmd[i] = '\0';
       ++i;
     }
-    if (i >= length) break;
+    if (i >= length)
+      break;
 
     if (cmd[i] == '"' || cmd[i] == '\'') {
       // Quoted argument.
       char quote = cmd[i];
       cmd[i] = '\0';
       ++i;
-      if (i >= length) break;
+      if (i >= length)
+        break;
       argv[argc++] = &cmd[i];
       while (i < length && cmd[i] != quote) {
         if (cmd[i] == '\\' && (i + 1) < length) {
@@ -124,9 +125,7 @@ class CommandRegistry final {
    * @brief Register a command.
    * @return success or ShellError on failure.
    */
-  inline expected<void, ShellError> Register(const char* name, CmdFn fn,
-                                             void* ctx,
-                                             const char* desc) noexcept {
+  inline expected<void, ShellError> Register(const char* name, CmdFn fn, void* ctx, const char* desc) noexcept {
     std::lock_guard<std::mutex> lock(mtx_);
     for (uint32_t i = 0; i < count_; ++i) {
       if (std::strcmp(cmds_[i].name, name) == 0) {
@@ -145,8 +144,7 @@ class CommandRegistry final {
   }
 
   /// @brief Convenience: register without context.
-  inline expected<void, ShellError> Register(const char* name, CmdFn fn,
-                                             const char* desc) noexcept {
+  inline expected<void, ShellError> Register(const char* name, CmdFn fn, const char* desc) noexcept {
     return Register(name, fn, nullptr, desc);
   }
 
@@ -164,9 +162,9 @@ class CommandRegistry final {
    * @brief Auto-complete a command name prefix.
    * @return Number of matching commands.
    */
-  inline uint32_t AutoComplete(const char* prefix, char* out_buf,
-                                uint32_t buf_size) const noexcept {
-    if (buf_size == 0 || prefix == nullptr || out_buf == nullptr) return 0;
+  inline uint32_t AutoComplete(const char* prefix, char* out_buf, uint32_t buf_size) const noexcept {
+    if (buf_size == 0 || prefix == nullptr || out_buf == nullptr)
+      return 0;
 
     const uint32_t prefix_len = static_cast<uint32_t>(std::strlen(prefix));
     uint32_t match_idx[EMBSH_MAX_COMMANDS];
@@ -198,7 +196,8 @@ class CommandRegistry final {
     for (uint32_t m = 1; m < match_count; ++m) {
       const char* other = cmds_[match_idx[m]].name;
       uint32_t j = 0;
-      while (j < common && first[j] == other[j]) ++j;
+      while (j < common && first[j] == other[j])
+        ++j;
       common = j;
     }
     uint32_t n = (common < buf_size - 1) ? common : (buf_size - 1);
@@ -208,8 +207,7 @@ class CommandRegistry final {
   }
 
   /// @brief Iterate over all registered commands.
-  inline void ForEach(
-      function_ref<void(const CmdEntry&)> visitor) const noexcept {
+  inline void ForEach(function_ref<void(const CmdEntry&)> visitor) const noexcept {
     for (uint32_t i = 0; i < count_; ++i) {
       visitor(cmds_[i]);
     }
@@ -258,7 +256,8 @@ inline int ShellPrintf(const char* fmt, ...)
 
 inline int ShellPrintf(const char* fmt, ...) {
   auto& out = detail::CurrentOutput();
-  if (out.write == nullptr) return -1;
+  if (out.write == nullptr)
+    return -1;
 
   char buf[512];
   va_list args;
@@ -276,9 +275,8 @@ inline int ShellPrintf(const char* fmt, ...) {
 namespace detail {
 
 inline int HelpCommand(int /*argc*/, char* /*argv*/[], void* /*ctx*/) {
-  CommandRegistry::Instance().ForEach([](const CmdEntry& cmd) {
-    ShellPrintf("  %-16s - %s\r\n", cmd.name, cmd.desc ? cmd.desc : "");
-  });
+  CommandRegistry::Instance().ForEach(
+      [](const CmdEntry& cmd) { ShellPrintf("  %-16s - %s\r\n", cmd.name, cmd.desc ? cmd.desc : ""); });
   return 0;
 }
 
@@ -304,9 +302,7 @@ class CmdAutoReg {
   CmdAutoReg(const char* name, CmdFn fn, void* ctx, const char* desc) {
     CommandRegistry::Instance().Register(name, fn, ctx, desc);
   }
-  CmdAutoReg(const char* name, CmdFn fn, const char* desc) {
-    CommandRegistry::Instance().Register(name, fn, desc);
-  }
+  CmdAutoReg(const char* name, CmdFn fn, const char* desc) { CommandRegistry::Instance().Register(name, fn, desc); }
 };
 
 /**
@@ -318,8 +314,7 @@ class CmdAutoReg {
  *   EMBSH_CMD(reboot, "Reboot the system");
  * @endcode
  */
-#define EMBSH_CMD(cmd, desc) \
-  static ::embsh::CmdAutoReg EMBSH_CONCAT(_embsh_reg_, cmd)(#cmd, cmd, desc)
+#define EMBSH_CMD(cmd, desc) static ::embsh::CmdAutoReg EMBSH_CONCAT(_embsh_reg_, cmd)(#cmd, cmd, desc)
 
 /**
  * @brief RT-Thread MSH compatible registration macro.

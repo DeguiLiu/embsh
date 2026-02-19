@@ -31,16 +31,10 @@ class ConsoleShell final {
     int write_fd;
     bool raw_mode;
 
-    Config() noexcept
-        : prompt("embsh> "),
-          read_fd(STDIN_FILENO),
-          write_fd(STDOUT_FILENO),
-          raw_mode(true) {}
+    Config() noexcept : prompt("embsh> "), read_fd(STDIN_FILENO), write_fd(STDOUT_FILENO), raw_mode(true) {}
   };
 
-  explicit ConsoleShell(const Config& cfg = Config{}) : cfg_(cfg) {
-    detail::RegisterHelpOnce();
-  }
+  explicit ConsoleShell(const Config& cfg = Config{}) : cfg_(cfg) { detail::RegisterHelpOnce(); }
 
   ~ConsoleShell() { Stop(); }
 
@@ -56,9 +50,7 @@ class ConsoleShell final {
   /// @brief Run the shell synchronously (blocking).
   inline void Run() noexcept;
 
-  bool IsRunning() const noexcept {
-    return running_.load(std::memory_order_relaxed);
-  }
+  bool IsRunning() const noexcept { return running_.load(std::memory_order_relaxed); }
 
  private:
   Config cfg_;
@@ -78,8 +70,10 @@ class ConsoleShell final {
 // ============================================================================
 
 inline void ConsoleShell::SetRawMode() noexcept {
-  if (!cfg_.raw_mode) return;
-  if (::tcgetattr(cfg_.read_fd, &orig_termios_) != 0) return;
+  if (!cfg_.raw_mode)
+    return;
+  if (::tcgetattr(cfg_.read_fd, &orig_termios_) != 0)
+    return;
   termios_saved_ = true;
 
   struct termios raw = orig_termios_;
@@ -122,7 +116,8 @@ inline expected<void, ShellError> ConsoleShell::Start() noexcept {
 }
 
 inline void ConsoleShell::Stop() noexcept {
-  if (!running_.load(std::memory_order_relaxed)) return;
+  if (!running_.load(std::memory_order_relaxed))
+    return;
   running_.store(false, std::memory_order_release);
   session_.active.store(false, std::memory_order_release);
 
@@ -154,22 +149,24 @@ inline void ConsoleShell::RunLoop() noexcept {
   auto& s = session_;
   SessionWrite(s, cfg_.prompt);
 
-  while (running_.load(std::memory_order_relaxed) &&
-         s.active.load(std::memory_order_acquire)) {
+  while (running_.load(std::memory_order_relaxed) && s.active.load(std::memory_order_acquire)) {
     struct pollfd pfd;
     pfd.fd = s.read_fd;
     pfd.events = POLLIN;
     int pr = ::poll(&pfd, 1, 200);
-    if (pr == 0) continue;
+    if (pr == 0)
+      continue;
     if (pr < 0) {
-      if (errno == EINTR) continue;
+      if (errno == EINTR)
+        continue;
       break;
     }
 
     uint8_t byte;
     ssize_t n = s.read_fn(s.read_fd, &byte, 1);
     if (n <= 0) {
-      if (n < 0 && errno == EINTR) continue;
+      if (n < 0 && errno == EINTR)
+        continue;
       break;
     }
 

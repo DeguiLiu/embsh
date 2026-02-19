@@ -32,16 +32,10 @@ class UartShell final {
     const char* prompt;
     int override_fd;
 
-    Config() noexcept
-        : device("/dev/ttyS0"),
-          baudrate(115200),
-          prompt("embsh> "),
-          override_fd(-1) {}
+    Config() noexcept : device("/dev/ttyS0"), baudrate(115200), prompt("embsh> "), override_fd(-1) {}
   };
 
-  explicit UartShell(const Config& cfg = Config{}) : cfg_(cfg) {
-    detail::RegisterHelpOnce();
-  }
+  explicit UartShell(const Config& cfg = Config{}) : cfg_(cfg) { detail::RegisterHelpOnce(); }
 
   ~UartShell() { Stop(); }
 
@@ -54,9 +48,7 @@ class UartShell final {
   /// @brief Stop the UART shell.
   inline void Stop() noexcept;
 
-  bool IsRunning() const noexcept {
-    return running_.load(std::memory_order_relaxed);
-  }
+  bool IsRunning() const noexcept { return running_.load(std::memory_order_relaxed); }
 
  private:
   Config cfg_;
@@ -70,15 +62,24 @@ class UartShell final {
 
   static inline speed_t BaudToSpeed(uint32_t baud) noexcept {
     switch (baud) {
-      case 9600:   return B9600;
-      case 19200:  return B19200;
-      case 38400:  return B38400;
-      case 57600:  return B57600;
-      case 115200: return B115200;
-      case 230400: return B230400;
-      case 460800: return B460800;
-      case 921600: return B921600;
-      default:     return B115200;
+      case 9600:
+        return B9600;
+      case 19200:
+        return B19200;
+      case 38400:
+        return B38400;
+      case 57600:
+        return B57600;
+      case 115200:
+        return B115200;
+      case 230400:
+        return B230400;
+      case 460800:
+        return B460800;
+      case 921600:
+        return B921600;
+      default:
+        return B115200;
     }
   }
 };
@@ -121,8 +122,7 @@ inline expected<void, ShellError> UartShell::Start() noexcept {
 
     // Raw mode.
     tty.c_lflag &= ~static_cast<tcflag_t>(ICANON | ECHO | ECHOE | ISIG);
-    tty.c_iflag &= ~static_cast<tcflag_t>(IXON | IXOFF | IXANY |
-                                           ICRNL | INLCR | IGNCR);
+    tty.c_iflag &= ~static_cast<tcflag_t>(IXON | IXOFF | IXANY | ICRNL | INLCR | IGNCR);
     tty.c_oflag &= ~static_cast<tcflag_t>(OPOST);
 
     tty.c_cc[VMIN] = 1;
@@ -152,7 +152,8 @@ inline expected<void, ShellError> UartShell::Start() noexcept {
 }
 
 inline void UartShell::Stop() noexcept {
-  if (!running_.load(std::memory_order_relaxed)) return;
+  if (!running_.load(std::memory_order_relaxed))
+    return;
   running_.store(false, std::memory_order_release);
   session_.active.store(false, std::memory_order_release);
 
@@ -170,22 +171,24 @@ inline void UartShell::RunLoop() noexcept {
   auto& s = session_;
   SessionWrite(s, cfg_.prompt);
 
-  while (running_.load(std::memory_order_relaxed) &&
-         s.active.load(std::memory_order_acquire)) {
+  while (running_.load(std::memory_order_relaxed) && s.active.load(std::memory_order_acquire)) {
     struct pollfd pfd;
     pfd.fd = s.read_fd;
     pfd.events = POLLIN;
     int pr = ::poll(&pfd, 1, 200);
-    if (pr == 0) continue;
+    if (pr == 0)
+      continue;
     if (pr < 0) {
-      if (errno == EINTR) continue;
+      if (errno == EINTR)
+        continue;
       break;
     }
 
     uint8_t byte;
     ssize_t n = s.read_fn(s.read_fd, &byte, 1);
     if (n <= 0) {
-      if (n < 0 && errno == EINTR) continue;
+      if (n < 0 && errno == EINTR)
+        continue;
       break;
     }
 

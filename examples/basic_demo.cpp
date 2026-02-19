@@ -13,11 +13,11 @@
 
 #include "embsh/telnet_server.hpp"
 
-#include <chrono>
-#include <cstdio>
-#include <csignal>
-#include <thread>
 #include <atomic>
+#include <chrono>
+#include <csignal>
+#include <cstdio>
+#include <thread>
 
 static std::atomic<bool> g_running{true};
 
@@ -67,8 +67,7 @@ int main() {
   embsh::TelnetServer server(cfg);
   auto r = server.Start();
   if (!r.has_value()) {
-    std::fprintf(stderr, "Failed to start server (error %d)\n",
-                 static_cast<int>(r.error_value()));
+    std::fprintf(stderr, "Failed to start server (error %d)\n", static_cast<int>(r.error_value()));
     return 1;
   }
 

@@ -45,13 +45,12 @@
 // Assertion
 // ============================================================================
 
-#define EMBSH_ASSERT(cond)                                                   \
-  do {                                                                       \
-    if (EMBSH_UNLIKELY(!(cond))) {                                           \
-      std::fprintf(stderr, "EMBSH ASSERT FAILED: %s (%s:%d)\n", #cond,      \
-                   __FILE__, __LINE__);                                      \
-      std::abort();                                                          \
-    }                                                                        \
+#define EMBSH_ASSERT(cond)                                                                  \
+  do {                                                                                      \
+    if (EMBSH_UNLIKELY(!(cond))) {                                                          \
+      std::fprintf(stderr, "EMBSH ASSERT FAILED: %s (%s:%d)\n", #cond, __FILE__, __LINE__); \
+      std::abort();                                                                         \
+    }                                                                                       \
   } while (0)
 
 #endif  // EMBSH_PLATFORM_HPP_

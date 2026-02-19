@@ -32,19 +32,18 @@ struct PtyPair {
   }
 
   ~PtyPair() {
-    if (master >= 0) ::close(master);
-    if (slave >= 0) ::close(slave);
+    if (master >= 0)
+      ::close(master);
+    if (slave >= 0)
+      ::close(slave);
   }
 
-  void SendToSlave(const char* str) {
-    (void)::write(master, str, std::strlen(str));
-  }
+  void SendToSlave(const char* str) { (void)::write(master, str, std::strlen(str)); }
 
   std::string ReadFromSlave(int timeout_ms = 500) {
     std::string result;
     char buf[256];
-    auto deadline = std::chrono::steady_clock::now() +
-                    std::chrono::milliseconds(timeout_ms);
+    auto deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds(timeout_ms);
     while (std::chrono::steady_clock::now() < deadline) {
       struct pollfd pfd;
       pfd.fd = master;
@@ -95,8 +94,7 @@ TEST_CASE("UartShell: command execution via PTY", "[uart_shell]") {
     uart_cmd_ran = true;
     return 0;
   };
-  embsh::CommandRegistry::Instance().Register("uart_test", cmd_fn,
-                                              "uart test");
+  embsh::CommandRegistry::Instance().Register("uart_test", cmd_fn, "uart test");
 
   PtyPair pty;
   REQUIRE(pty.slave >= 0);

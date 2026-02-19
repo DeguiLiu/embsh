@@ -27,21 +27,22 @@ struct ConsolePipes {
   }
 
   ~ConsolePipes() {
-    if (input_pipe[0] >= 0) ::close(input_pipe[0]);
-    if (input_pipe[1] >= 0) ::close(input_pipe[1]);
-    if (output_pipe[0] >= 0) ::close(output_pipe[0]);
-    if (output_pipe[1] >= 0) ::close(output_pipe[1]);
+    if (input_pipe[0] >= 0)
+      ::close(input_pipe[0]);
+    if (input_pipe[1] >= 0)
+      ::close(input_pipe[1]);
+    if (output_pipe[0] >= 0)
+      ::close(output_pipe[0]);
+    if (output_pipe[1] >= 0)
+      ::close(output_pipe[1]);
   }
 
-  void SendInput(const char* str) {
-    (void)::write(input_pipe[1], str, std::strlen(str));
-  }
+  void SendInput(const char* str) { (void)::write(input_pipe[1], str, std::strlen(str)); }
 
   std::string ReadOutput(int timeout_ms = 500) {
     std::string result;
     char buf[256];
-    auto deadline = std::chrono::steady_clock::now() +
-                    std::chrono::milliseconds(timeout_ms);
+    auto deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds(timeout_ms);
     while (std::chrono::steady_clock::now() < deadline) {
       struct pollfd pfd;
       pfd.fd = output_pipe[0];
@@ -93,8 +94,7 @@ TEST_CASE("ConsoleShell: command execution via pipe", "[console_shell]") {
     console_cmd_ran = true;
     return 0;
   };
-  embsh::CommandRegistry::Instance().Register("console_test", cmd_fn,
-                                              "console test");
+  embsh::CommandRegistry::Instance().Register("console_test", cmd_fn, "console test");
 
   ConsolePipes pipes;
 

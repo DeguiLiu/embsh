@@ -86,8 +86,8 @@ struct Session {
   // History
   char history[EMBSH_HISTORY_SIZE][EMBSH_LINE_BUF_SIZE] = {};
   uint32_t hist_count = 0;
-  uint32_t hist_write = 0;    ///< Next write index (ring).
-  uint32_t hist_nav = 0;      ///< Current navigation index.
+  uint32_t hist_write = 0;     ///< Next write index (ring).
+  uint32_t hist_nav = 0;       ///< Current navigation index.
   bool hist_browsing = false;  ///< True while navigating history.
 
   // Telnet IAC state
@@ -97,7 +97,7 @@ struct Session {
   bool auth_required = false;
   bool authenticated = false;
   uint8_t auth_attempts = 0;
-  char auth_user_buf[64] = {};   ///< Buffer for username input.
+  char auth_user_buf[64] = {};  ///< Buffer for username input.
   uint32_t auth_user_pos = 0;
 
   // ESC sequence state
@@ -144,16 +144,19 @@ namespace editor {
 
 /// @brief Push a command line into the history ring buffer.
 inline void PushHistory(Session& s) noexcept {
-  if (s.line_pos == 0) return;
+  if (s.line_pos == 0)
+    return;
   // Skip duplicate of the last entry.
   if (s.hist_count > 0) {
     uint32_t last = (s.hist_write + EMBSH_HISTORY_SIZE - 1) % EMBSH_HISTORY_SIZE;
-    if (std::strcmp(s.history[last], s.line_buf) == 0) return;
+    if (std::strcmp(s.history[last], s.line_buf) == 0)
+      return;
   }
   std::memcpy(s.history[s.hist_write], s.line_buf, s.line_pos);
   s.history[s.hist_write][s.line_pos] = '\0';
   s.hist_write = (s.hist_write + 1) % EMBSH_HISTORY_SIZE;
-  if (s.hist_count < EMBSH_HISTORY_SIZE) ++s.hist_count;
+  if (s.hist_count < EMBSH_HISTORY_SIZE)
+    ++s.hist_count;
 }
 
 /// @brief Clear the current line on the terminal and replace with new text.
@@ -163,7 +166,8 @@ inline void ReplaceLine(Session& s, const char* new_line) noexcept {
     SessionWrite(s, "\b \b");
   }
   uint32_t len = static_cast<uint32_t>(std::strlen(new_line));
-  if (len >= EMBSH_LINE_BUF_SIZE) len = EMBSH_LINE_BUF_SIZE - 1;
+  if (len >= EMBSH_LINE_BUF_SIZE)
+    len = EMBSH_LINE_BUF_SIZE - 1;
   std::memcpy(s.line_buf, new_line, len);
   s.line_buf[len] = '\0';
   s.line_pos = len;
@@ -172,20 +176,21 @@ inline void ReplaceLine(Session& s, const char* new_line) noexcept {
 
 /// @brief Navigate history up (older).
 inline void HistoryUp(Session& s) noexcept {
-  if (s.hist_count == 0) return;
+  if (s.hist_count == 0)
+    return;
   if (!s.hist_browsing) {
     s.hist_nav = s.hist_write;
     s.hist_browsing = true;
   }
   uint32_t prev = (s.hist_nav + EMBSH_HISTORY_SIZE - 1) % EMBSH_HISTORY_SIZE;
   // Check if we've gone past the oldest entry.
-  uint32_t oldest = (s.hist_count < EMBSH_HISTORY_SIZE)
-                        ? 0
-                        : s.hist_write;
-  if (prev == s.hist_nav) return;  // Single entry case.
+  uint32_t oldest = (s.hist_count < EMBSH_HISTORY_SIZE) ? 0 : s.hist_write;
+  if (prev == s.hist_nav)
+    return;  // Single entry case.
   // Don't go past oldest.
   uint32_t dist_from_write = (s.hist_write + EMBSH_HISTORY_SIZE - prev) % EMBSH_HISTORY_SIZE;
-  if (dist_from_write > s.hist_count) return;
+  if (dist_from_write > s.hist_count)
+    return;
 
   s.hist_nav = prev;
   ReplaceLine(s, s.history[s.hist_nav]);
@@ -193,7 +198,8 @@ inline void HistoryUp(Session& s) noexcept {
 
 /// @brief Navigate history down (newer).
 inline void HistoryDown(Session& s) noexcept {
-  if (!s.hist_browsing) return;
+  if (!s.hist_browsing)
+    return;
   uint32_t next = (s.hist_nav + 1) % EMBSH_HISTORY_SIZE;
   if (next == s.hist_write) {
     // Back to current (empty) line.
@@ -213,8 +219,7 @@ inline void HistoryDown(Session& s) noexcept {
 inline void TabComplete(Session& s, const char* prompt) noexcept {
   s.line_buf[s.line_pos] = '\0';
   char completion[64] = {};
-  uint32_t matches = CommandRegistry::Instance().AutoComplete(
-      s.line_buf, completion, sizeof(completion));
+  uint32_t matches = CommandRegistry::Instance().AutoComplete(s.line_buf, completion, sizeof(completion));
 
   if (matches == 1) {
     // Single match: replace line with completion + space.
@@ -299,7 +304,8 @@ inline bool ProcessByte(Session& s, uint8_t byte, const char* prompt) noexcept {
   // IAC filtering for telnet mode.
   if (s.telnet_mode) {
     char ch = FilterIac(s, byte);
-    if (ch == '\0') return false;
+    if (ch == '\0')
+      return false;
     byte = static_cast<uint8_t>(ch);
   }
 
@@ -318,11 +324,18 @@ inline bool ProcessByte(Session& s, uint8_t byte, const char* prompt) noexcept {
     case Session::EscState::kBracket:
       s.esc_state = Session::EscState::kNone;
       switch (ch) {
-        case 'A': HistoryUp(s); return false;    // Up arrow
-        case 'B': HistoryDown(s); return false;  // Down arrow
-        case 'C': return false;  // Right arrow (TODO: cursor move)
-        case 'D': return false;  // Left arrow (TODO: cursor move)
-        default: return false;
+        case 'A':
+          HistoryUp(s);
+          return false;  // Up arrow
+        case 'B':
+          HistoryDown(s);
+          return false;  // Down arrow
+        case 'C':
+          return false;  // Right arrow (TODO: cursor move)
+        case 'D':
+          return false;  // Left arrow (TODO: cursor move)
+        default:
+          return false;
       }
 
     case Session::EscState::kNone:
@@ -411,7 +424,8 @@ inline void ExecuteLine(Session& s) noexcept {
   char* argv[EMBSH_MAX_ARGS] = {};
   int argc = ShellSplit(cmd_copy, s.line_pos, argv);
 
-  if (argc <= 0) return;
+  if (argc <= 0)
+    return;
 
   // Built-in: exit / quit.
   if (std::strcmp(argv[0], "exit") == 0 || std::strcmp(argv[0], "quit") == 0) {

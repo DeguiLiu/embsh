@@ -14,9 +14,9 @@
 #include "embsh/console_shell.hpp"
 #include "embsh/telnet_server.hpp"
 
-#include <cstdio>
-#include <csignal>
 #include <atomic>
+#include <csignal>
+#include <cstdio>
 
 static std::atomic<bool> g_running{true};
 

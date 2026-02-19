@@ -22,18 +22,17 @@
 
 static int TcpConnect(uint16_t port, int timeout_ms = 1000) {
   int fd = ::socket(AF_INET, SOCK_STREAM, 0);
-  if (fd < 0) return -1;
+  if (fd < 0)
+    return -1;
 
   struct sockaddr_in addr = {};
   addr.sin_family = AF_INET;
   addr.sin_port = htons(port);
   addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
 
-  auto deadline = std::chrono::steady_clock::now() +
-                  std::chrono::milliseconds(timeout_ms);
+  auto deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds(timeout_ms);
   while (std::chrono::steady_clock::now() < deadline) {
-    if (::connect(fd, reinterpret_cast<struct sockaddr*>(&addr),
-                  sizeof(addr)) == 0) {
+    if (::connect(fd, reinterpret_cast<struct sockaddr*>(&addr), sizeof(addr)) == 0) {
       return fd;
     }
     std::this_thread::sleep_for(std::chrono::milliseconds(20));
@@ -45,8 +44,7 @@ static int TcpConnect(uint16_t port, int timeout_ms = 1000) {
 static std::string TcpRecv(int fd, int timeout_ms = 500) {
   std::string result;
   char buf[512];
-  auto deadline = std::chrono::steady_clock::now() +
-                  std::chrono::milliseconds(timeout_ms);
+  auto deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds(timeout_ms);
   while (std::chrono::steady_clock::now() < deadline) {
     struct pollfd pfd;
     pfd.fd = fd;
@@ -139,8 +137,7 @@ TEST_CASE("TelnetServer: command execution via telnet", "[telnet_server]") {
     cmd_executed = true;
     return 0;
   };
-  embsh::CommandRegistry::Instance().Register("telnet_test_cmd", test_fn,
-                                              "test cmd");
+  embsh::CommandRegistry::Instance().Register("telnet_test_cmd", test_fn, "test cmd");
 
   embsh::ServerConfig cfg;
   cfg.port = 23234;

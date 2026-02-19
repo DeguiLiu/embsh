@@ -55,9 +55,7 @@ struct ServerConfig {
  */
 class TelnetServer final {
  public:
-  explicit TelnetServer(const ServerConfig& cfg = ServerConfig{}) : cfg_(cfg) {
-    detail::RegisterHelpOnce();
-  }
+  explicit TelnetServer(const ServerConfig& cfg = ServerConfig{}) : cfg_(cfg) { detail::RegisterHelpOnce(); }
 
   ~TelnetServer() { Stop(); }
 
@@ -71,9 +69,7 @@ class TelnetServer final {
   inline void Stop() noexcept;
 
   /// @brief Check if the server is running.
-  bool IsRunning() const noexcept {
-    return running_.load(std::memory_order_relaxed);
-  }
+  bool IsRunning() const noexcept { return running_.load(std::memory_order_relaxed); }
 
  private:
   struct SessionSlot {
@@ -142,8 +138,7 @@ inline expected<void, ShellError> TelnetServer::Start() noexcept {
   addr.sin_addr.s_addr = INADDR_ANY;
   addr.sin_port = htons(cfg_.port);
 
-  if (::bind(listen_fd_, reinterpret_cast<struct sockaddr*>(&addr),
-             sizeof(addr)) < 0) {
+  if (::bind(listen_fd_, reinterpret_cast<struct sockaddr*>(&addr), sizeof(addr)) < 0) {
     ::close(listen_fd_);
     listen_fd_ = -1;
     return expected<void, ShellError>::error(ShellError::kPortInUse);
@@ -162,7 +157,8 @@ inline expected<void, ShellError> TelnetServer::Start() noexcept {
 }
 
 inline void TelnetServer::Stop() noexcept {
-  if (!running_.load(std::memory_order_relaxed)) return;
+  if (!running_.load(std::memory_order_relaxed))
+    return;
   running_.store(false, std::memory_order_release);
 
   // Close the listen socket to unblock accept().
@@ -197,14 +193,14 @@ inline void TelnetServer::AcceptLoop() noexcept {
     pfd.fd = listen_fd_;
     pfd.events = POLLIN;
     int pr = ::poll(&pfd, 1, 500);
-    if (pr <= 0) continue;
+    if (pr <= 0)
+      continue;
 
     struct sockaddr_in client_addr = {};
     socklen_t addr_len = sizeof(client_addr);
-    int client_fd = ::accept(listen_fd_,
-                             reinterpret_cast<struct sockaddr*>(&client_addr),
-                             &addr_len);
-    if (client_fd < 0) continue;
+    int client_fd = ::accept(listen_fd_, reinterpret_cast<struct sockaddr*>(&client_addr), &addr_len);
+    if (client_fd < 0)
+      continue;
 
     int idx = FindFreeSlot();
     if (idx < 0) {
@@ -267,21 +263,23 @@ inline void TelnetServer::SessionLoop(SessionSlot& slot) noexcept {
   // Main interactive loop.
   SessionWrite(s, cfg_.prompt);
 
-  while (running_.load(std::memory_order_relaxed) &&
-         s.active.load(std::memory_order_acquire)) {
+  while (running_.load(std::memory_order_relaxed) && s.active.load(std::memory_order_acquire)) {
     struct pollfd pfd;
     pfd.fd = s.read_fd;
     pfd.events = POLLIN;
     int pr = ::poll(&pfd, 1, 200);
-    if (pr == 0) continue;
+    if (pr == 0)
+      continue;
     if (pr < 0) {
-      if (errno == EINTR) continue;
+      if (errno == EINTR)
+        continue;
       break;
     }
 
     uint8_t byte;
     ssize_t n = s.read_fn(s.read_fd, &byte, 1);
-    if (n <= 0) break;
+    if (n <= 0)
+      break;
 
     if (editor::ProcessByte(s, byte, cfg_.prompt)) {
       editor::ExecuteLine(s);
@@ -317,18 +315,21 @@ inline void TelnetServer::RunAuth(Session& s) noexcept {
     pfd.events = POLLIN;
     int pr = ::poll(&pfd, 1, 200);
     if (pr <= 0) {
-      if (pr == 0) continue;
+      if (pr == 0)
+        continue;
       break;
     }
 
     uint8_t byte;
     ssize_t n = s.read_fn(s.read_fd, &byte, 1);
-    if (n <= 0) break;
+    if (n <= 0)
+      break;
 
     // IAC filtering.
     if (s.telnet_mode) {
       char ch = editor::FilterIac(s, byte);
-      if (ch == '\0') continue;
+      if (ch == '\0')
+        continue;
       byte = static_cast<uint8_t>(ch);
     }
 
@@ -371,8 +372,7 @@ inline void TelnetServer::RunAuth(Session& s) noexcept {
 
       // Password entered.
       pass_buf[buf_pos] = '\0';
-      if (std::strcmp(user_buf, cfg_.username) == 0 &&
-          std::strcmp(pass_buf, cfg_.password) == 0) {
+      if (std::strcmp(user_buf, cfg_.username) == 0 && std::strcmp(pass_buf, cfg_.password) == 0) {
         s.authenticated = true;
         SessionWrite(s, "Login successful.\r\n");
         return;

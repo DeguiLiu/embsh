@@ -54,9 +54,7 @@ class expected {
   explicit operator bool() const noexcept { return has_val_; }
 
   V& value() noexcept { return *reinterpret_cast<V*>(&storage_); }
-  const V& value() const noexcept {
-    return *reinterpret_cast<const V*>(&storage_);
-  }
+  const V& value() const noexcept { return *reinterpret_cast<const V*>(&storage_); }
 
   E& error_value() noexcept { return err_; }
   const E& error_value() const noexcept { return err_; }
@@ -109,12 +107,9 @@ class function_ref;
 template <typename R, typename... Args>
 class function_ref<R(Args...)> {
  public:
-  template <typename F,
-            typename = std::enable_if_t<
-                !std::is_same<std::decay_t<F>, function_ref>::value>>
+  template <typename F, typename = std::enable_if_t<!std::is_same<std::decay_t<F>, function_ref>::value>>
   function_ref(F&& f) noexcept
-      : obj_(const_cast<void*>(static_cast<const void*>(&f))),
-        invoke_(&Invoke<std::decay_t<F>>) {}
+      : obj_(const_cast<void*>(static_cast<const void*>(&f))), invoke_(&Invoke<std::decay_t<F>>) {}
 
   R operator()(Args... args) const { return invoke_(obj_, std::forward<Args>(args)...); }
 
